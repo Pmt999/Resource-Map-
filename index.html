@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RESOURCE MAP – Tower Hamlets</title>
+
+  <!-- Fonts & Leaflet CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@300;400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Top brand header (click to go Home/Login) -->
+  <header class="app-header">
+    <div class="header-logo" onclick="goHome()" title="Go to Login">
+      <div class="header-icon" aria-hidden="true">
+        <!-- Map icon (folded map + pin) -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
+             fill="none" stroke="var(--brand)" stroke-width="2" width="28" height="28">
+          <path d="M24 10l-14 4v36l14-4 16 6 14-4V12l-14 4-16-6z"/>
+          <circle cx="32" cy="28" r="5"/>
+          <path d="M32 33c-4 6-6 9-6 11a6 6 0 0012 0c0-2-2-5-6-11z"/>
+        </svg>
+      </div>
+      <span class="header-title">RESOURCE MAP</span>
+    </div>
+  </header>
+
+  <!-- Welcome / Auth area (centered) -->
+  <div id="welcomeContainer" class="centered-container">
+    <section id="loginSection" class="card active-card" aria-labelledby="loginHeading">
+      <h2 id="loginHeading">Login</h2>
+      <form id="loginForm" autocomplete="off">
+        <label for="loginName">Your Name</label>
+        <input id="loginName" type="text" required />
+        <label for="role">Role</label>
+        <select id="role" required>
+          <option value="user">User (Needer)</option>
+          <option value="helper">Helper</option>
+        </select>
+        <button type="submit" class="submit-btn">Login</button>
+      </form>
+      <p class="muted">Don't have an account? <button id="showRegisterBtn" class="link-btn">Register as Helper</button></p>
+    </section>
+
+    <section id="registerSection" class="card" aria-labelledby="registerHeading">
+      <h2 id="registerHeading">Register as Helper</h2>
+      <form id="registerForm" autocomplete="off">
+        <label for="regName">Your Name</label>
+        <input id="regName" type="text" required />
+        <label for="regAddress">Your Address</label>
+        <input id="regAddress" type="text" required />
+        <label for="regPhone">Your Phone</label>
+        <input id="regPhone" type="tel" required />
+        <label for="regResource">Initial Resource to Post</label>
+        <input id="regResource" type="text" required />
+        <button type="submit" class="submit-btn">Register</button>
+      </form>
+      <p class="muted">Already registered? <button id="showLoginBtn" class="link-btn">Login here</button></p>
+      <p id="registerStatus" class="muted" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <!-- Main app container (hidden until login) -->
+  <div id="appContainer" class="app" style="display:none;">
+    <aside class="sidebar" aria-label="Main sidebar">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <!-- Map icon (same visual language) -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
+               fill="none" stroke="var(--brand)" stroke-width="2" width="28" height="28">
+            <path d="M24 10l-14 4v36l14-4 16 6 14-4V12l-14 4-16-6z"/>
+            <circle cx="32" cy="28" r="5"/>
+            <path d="M32 33c-4 6-6 9-6 11a6 6 0 0012 0c0-2-2-5-6-11z"/>
+          </svg>
+        </div>
+        <span id="welcomeName" class="brand-welcome"></span>
+      </div>
+
+      <nav class="nav" aria-label="Navigation">
+        <button id="mapBtn" onclick="showSection('map')">View Map</button>
+        <button id="postBtn" onclick="showSection('post')" style="display:none">Post Resource</button>
+        <button id="historyBtn" onclick="showSection('history')">History</button>
+        <button id="notifyBtn" onclick="showSection('notifications')" style="display:none">Notifications</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <small class="muted">© for the Community</small>
+      </div>
+    </aside>
+
+    <main class="main" aria-live="polite">
+      <div class="topbar">
+        <h2 class="muted">Supported by Tower Hamlets Community • Multilingual Support Available</h2>
+        <button id="logoutBtn" class="submit-btn" style="display:none">Logout</button>
+      </div>
+
+      <!-- Map section -->
+      <section id="map" class="section active">
+        <h2>Resource Map</h2>
+        <div id="mapContainer"></div>
+        <p id="mapError" class="error" style="display:none">Map failed to load. Please check your internet connection.</p>
+        <div id="resourcesList" class="list"></div>
+      </section>
+
+      <!-- Post resource (helpers only) -->
+      <section id="post" class="section">
+        <h2>Post a Resource</h2>
+        <form id="resourceForm">
+          <label for="resourcePost">Resource to Post (e.g., Food)</label>
+          <input id="resourcePost" type="text" required />
+          <button type="submit" class="submit-btn">Post Resource</button>
+        </form>
+        <p id="locationStatus" class="muted"></p>
+      </section>
+
+      <!-- History -->
+      <section id="history" class="section">
+        <h2>Pickup History</h2>
+        <div id="historyList" class="list"></div>
+      </section>
+
+      <!-- Notifications (helpers see pickup requests here) -->
+      <section id="notifications" class="section">
+        <h2>Notifications</h2>
+        <div id="notificationList" class="list"></div>
+      </section>
+
+      <footer>
+        <small class="muted">Developed for Tower Hamlets Community</small>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Leaflet -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <!-- App logic -->
+  <script src="script.js"></script>
+</body>
+</html>
